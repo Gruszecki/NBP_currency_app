@@ -1,7 +1,55 @@
 import argparse
+from dataclasses import dataclass
 
-from data import Data
+from data_management import Data
+from db import Database
 
+
+@dataclass
+class ParseData:
+    start_date: str = ''
+    end_date: str = ''
+    save: bool = False
+    analyze: bool = False
+    report: bool = False
+    csv: bool = False
+    json: bool = False
+    currency: str = ''
+    all: bool = False
+
+
+def app_logic(args: ParseData) -> int:
+    if args.start_date and args.end_date:
+        if Data.validate_date(args.start_date) and Data.validate_date(args.end_date):
+
+            data = Data(args.start_date, args.end_date)
+
+            if not args.analyze and not args.save:
+                print(f'\nNBP exchange rates data for date range {data.start} - {data.end}\n')
+                data.show_data()
+            else:
+                with Database() as db:
+                    if args.save:
+                        print(f'Saving NBP exchange rates data for date range {data.start} - {data.end} in database.')
+                        data.get_data()
+                        db.save_data(data)
+                    if args.analyze:
+                        pass
+
+        else:
+            print('Wrong data format. At least one provided date does not match pattern YYYY-MM-DD.')
+            return -1
+    elif args.report and (args.csv or args.json) and (bool(args.currency) ^ args.all):
+        print(f'Creating report.')
+    else:
+        return 0
+
+    print('Done.')
+    return 1
+
+
+def load_ui():
+    print('Load UI')
 
 
 if __name__ == '__main__':
@@ -17,15 +65,7 @@ if __name__ == '__main__':
     parser.add_argument('--all', help='Analyze all historic data over time (to be saved in report)', action='store_true')
 
     args = parser.parse_args()
+    parsed_data = ParseData(**vars(args))
 
-    if args.start_date and args.end_date:
-        if not args.analyze and not args.report:
-            if Data.validate_date(args.start_date) and Data.validate_date(args.end_date):
-                Data.show_data(args.start_date, args.end_date)
-            else:
-                print('Wrong data format. At least one provided date does not match pattern YYYY-MM-DD.\n')
-        else:
-            if args.analyze:
-                pass
-            if args.report:
-                pass
+    if not app_logic(parsed_data):
+        load_ui()
