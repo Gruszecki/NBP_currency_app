@@ -25,7 +25,7 @@ def app_logic(args: ParseData) -> int:
             data = Data(args.start_date, args.end_date)
 
             if not args.analyze and not args.save:
-                print(f'\nNBP exchange rates data for date range {data.start} - {data.end}\n')
+                print(f'NBP exchange rates data for date range {data.start} - {data.end}\n')
                 data.show_data()
             else:
                 with Database() as db:
