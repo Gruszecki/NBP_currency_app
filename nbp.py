@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from data_management import Data
 from db import Database
 
+from pprint import pprint
 
 @dataclass
 class ParseData:
@@ -22,23 +23,40 @@ def app_logic(args: ParseData) -> int:
     if args.start_date and args.end_date:
         if Data.validate_date(args.start_date) and Data.validate_date(args.end_date):
             data = Data(args.start_date, args.end_date)
-            if data.data:
-                if not args.analyze and not args.save:
-                    print(f'NBP exchange rates data for date range {data.start} - {data.end}')
+            if not args.analyze and not args.save:
+                print(f'NBP exchange rates data for date range {data.start} - {data.end}')
+                data.get_data_in_range()
+                if data.data:
                     data.show_data()
-                else:
-                    if args.save:
-                        with Database() as db:
-                            print(f'Saving NBP exchange rates data for date range {data.start} - {data.end} in database.')
-                            db.save_data(data)
-                    if args.analyze:
-                        if len(data.data) > 1:
-                            print(f'Analyzing the currencies in provided date range {data.start} - {data.end}')
-                            max_inc, max_dec = data.analyze_max_inc_dec()
-                            print(f'Currency with the largest increase ({max_inc[0]:.6f}) is {max_inc[1]}.')
-                            print(f'Currency with the largest decrease ({max_dec[0]:.6f}) is {max_dec[1]}.')
+            else:
+                if args.save:
+                    print(f'Saving NBP exchange rates data for date range {data.start} - {data.end} in database.')
+                    with Database() as db:
+                        data.get_data_in_range()
+                        if data.data:
+                            db.save_data(data.data)
+                if args.analyze:
+                    print(f'Analyzing the currencies in provided date range {args.start_date} - {args.end_date}')
+                    with Database() as db:
+                        first_data = db.get_data_for_date(args.start_date)
+                        last_data = db.get_data_for_date(args.end_date)
+
+                        if not first_data or not last_data:
+                            data.get_data_single_dates()
+
+                            if len(data.data) > 1:
+                                with Database(default_db=False) as temp_db:
+                                    temp_db.save_data(data.data)
+                                    max_diffs = temp_db.get_data_for_analyze(args.start_date, args.end_date)
+                            else:
+                                print('There is no data for at least one of provided dates.')
                         else:
-                            print('Time range given to be analyzed has only one record. There must be at least two records.')
+                            max_diffs = db.get_data_for_analyze(args.start_date, args.end_date)
+
+                        print(f'Currency with the largest increase {max_diffs[0][2]:.6f} is {max_diffs[0][1]} ({max_diffs[0][0]}).')
+                        if len(max_diffs) > 1:
+                            print(f'Currency with the largest decrease {max_diffs[1][2]:.6f} is {max_diffs[1][1]} ({max_diffs[1][0]}).')
+
         else:
             print('Wrong data format. At least one provided date does not match pattern YYYY-MM-DD.')
             return -1

@@ -1,18 +1,23 @@
+import os
 import sqlite3
+from pprint import pprint
 
-from data_management import Data
+from consts import database_name
 
 
 class Database:
-    def __init__(self):
-        self.conn = sqlite3.connect('nbp_exchange_rates.db')
+    def __init__(self, default_db: bool = True):
+        self.default_db = default_db
+        db_name = database_name if self.default_db else 'temp.db'
+
+        self.conn = sqlite3.connect(f'{db_name}')
         self.cursor = self.conn.cursor()
 
-        self.cursor.execute('''CREATE TABLE IF NOT EXISTS exchange_rates (
+        self.cursor.execute(f'''CREATE TABLE IF NOT EXISTS exchange_rates (
                         date DATE NOT NULL, 
                         code TEXT NOT NULL, 
                         currency TEXT NOT NULL, 
-                        mid INTEGER NOT NULL,
+                        mid REAL NOT NULL,
                         PRIMARY KEY (date, code)
                         )''')
 
@@ -26,17 +31,38 @@ class Database:
 
         self.conn.close()
 
+        if not self.default_db:
+            os.remove('temp.db')
+
         return True
 
-    def save_data(self, records: Data) -> None:
-        for record in records.data:
+    def save_data(self, data: list[dict]) -> None:
+        for record in data:
             record_date = record['effectiveDate']
             for rate in record['rates']:
-                self.cursor.execute('INSERT OR IGNORE INTO exchange_rates (date, code, currency, mid) VALUES (?, ?, ?,?)',
-                                    (record_date, rate['code'], rate['currency'], rate['mid']))
+                self.cursor.execute('INSERT OR IGNORE INTO exchange_rates (date, code, currency, mid) VALUES (?, ?, ?, ?)',
+                                    (record_date, rate['code'], rate['currency'], round(rate['mid'], 6)))
         self.conn.commit()
 
-    def read_data(self) -> None:
-        self.cursor.execute('SELECT * FROM exchange_rates ORDER BY date, code')
-        for row in self.cursor.fetchall():
-            print(row)
+    def get_data_for_date(self, date: str) -> list:
+        self.cursor.execute('SELECT * FROM exchange_rates WHERE date is ?', (date,))
+        return self.cursor.fetchall()
+
+    def get_data_for_analyze(self, first: str, last: str) -> list:
+        self.cursor.execute(
+            'WITH diffs AS '
+            '(WITH first AS (SELECT code, currency, mid FROM exchange_rates WHERE date is ?),'
+            'last AS (SELECT code, currency, mid FROM exchange_rates WHERE date is ?)'
+            'SELECT first.code, first.currency, last.mid-first.mid AS change '
+            'FROM first INNER JOIN last ON first.code = last.code)'
+            'SELECT code, currency, change FROM diffs '
+            'WHERE change = (SELECT MAX(change) FROM diffs) OR change = (SELECT MIN(change) FROM diffs)'
+            'ORDER BY change DESC',
+            (first, last)
+        )
+
+        return self.cursor.fetchall()
+
+    def read_db(self):
+        self.cursor.execute('SELECT * FROM exchange_rates')
+        pprint(self.cursor.fetchall())

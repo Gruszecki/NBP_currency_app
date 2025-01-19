@@ -12,20 +12,6 @@ class Data:
         self.end = end_date
         self.data = []
 
-        self._get_data_range()
-
-    def _get_data_range(self) -> None:
-        """Retrieve data from NBP API for time range specified within class instance."""
-        ranges = self._identify_date_ranges()
-
-        for ran in ranges:
-            try:
-                response = requests.get(f'{api_table_a}/{ran[0]}/{ran[1]}')
-                self.data.extend(response.json())
-            except requests.exceptions.JSONDecodeError:
-                print("Given time range exceeds available data.")
-                return None
-
     def _identify_date_ranges(self) -> list[tuple]:
         """
         Identify and generate a list of date ranges between the start and end dates.
@@ -42,11 +28,10 @@ class Data:
         Notes:
             The `start` and `end` attributes are expected to be strings in "YYYY-MM-DD" format.
         """
-        first = datetime(*map(int, self.start.split('-')))
-        last = datetime(*map(int, self.end.split('-')))
-
-        days_delta = timedelta(days=max_day_range)
         date_format = '%Y-%m-%d'
+        first = datetime.strptime(self.start, date_format)
+        last = datetime.strptime(self.end, date_format)
+        days_delta = timedelta(days=max_day_range)
         ranges = []
 
         while first <= last:
@@ -58,38 +43,27 @@ class Data:
 
         return ranges
 
+    def get_data_in_range(self) -> None:
+        """Retrieve data from NBP API for time range specified within class instance."""
+        ranges = self._identify_date_ranges()
+
+        for ran in ranges:
+            try:
+                response = requests.get(f'{api_table_a}/{ran[0]}/{ran[1]}')
+                self.data.extend(response.json())
+            except requests.exceptions.JSONDecodeError:
+                print("Given time range exceeds available data.")
+                return None
+
+    def get_data_single_dates(self) -> None:
+        first = requests.get(f'{api_table_a}/{self.start}')
+        self.data.extend(first.json())
+
+        last = requests.get(f'{api_table_a}/{self.end}')
+        self.data.extend(last.json())
+
     def show_data(self) -> None:
         pprint(self.data)
-
-    def analyze_max_inc_dec(self):
-        """
-        Analyze the maximum increase and decrease in currency exchange rates over a specified period.
-
-        Returns:
-            tuple: A tuple containing:
-                - max_inc (tuple): The maximum increase as a tuple of the increase value (float) and
-                  the currency code (str). Example: (1.25, 'USD').
-                - max_dec (tuple): The maximum decrease as a tuple of the decrease value (float) and
-                  the currency code (str). Example: (-0.75, 'EUR').
-        """
-        first = self.data[0]['rates']
-        last = self.data[len(self.data)-1]['rates']
-        last_d = {record['code']: record['mid'] for record in last}
-
-        max_dec = (999, '')
-        max_inc = (0, '')
-
-        for first_d in first:
-            val_last = last_d.get(first_d['code'], 0)
-
-            if val_last:
-                diff = val_last - first_d['mid']
-                if diff > max_inc[0]:
-                    max_inc = (diff, first_d['code'])
-                if diff < max_dec[0]:
-                    max_dec = (diff, first_d['code'])
-
-        return max_inc, max_dec
 
     @staticmethod
     def validate_date(date: str) -> bool:
