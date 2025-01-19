@@ -21,21 +21,24 @@ class ParseData:
 def app_logic(args: ParseData) -> int:
     if args.start_date and args.end_date:
         if Data.validate_date(args.start_date) and Data.validate_date(args.end_date):
-
             data = Data(args.start_date, args.end_date)
-
-            if not args.analyze and not args.save:
-                print(f'NBP exchange rates data for date range {data.start} - {data.end}\n')
-                data.show_data()
-            else:
-                with Database() as db:
+            if data.data:
+                if not args.analyze and not args.save:
+                    print(f'NBP exchange rates data for date range {data.start} - {data.end}')
+                    data.show_data()
+                else:
                     if args.save:
-                        print(f'Saving NBP exchange rates data for date range {data.start} - {data.end} in database.')
-                        data.get_data()
-                        db.save_data(data)
+                        with Database() as db:
+                            print(f'Saving NBP exchange rates data for date range {data.start} - {data.end} in database.')
+                            db.save_data(data)
                     if args.analyze:
-                        pass
-
+                        if len(data.data) > 1:
+                            print(f'Analyzing the currencies in provided date range {data.start} - {data.end}')
+                            max_inc, max_dec = data.analyze_max_inc_dec()
+                            print(f'Currency with the largest increase ({max_inc[0]:.6f}) is {max_inc[1]}.')
+                            print(f'Currency with the largest decrease ({max_dec[0]:.6f}) is {max_dec[1]}.')
+                        else:
+                            print('Time range given to be analyzed has only one record. There must be at least two records.')
         else:
             print('Wrong data format. At least one provided date does not match pattern YYYY-MM-DD.')
             return -1
@@ -44,7 +47,6 @@ def app_logic(args: ParseData) -> int:
     else:
         return 0
 
-    print('Done.')
     return 1
 
 
