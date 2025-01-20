@@ -43,7 +43,7 @@ class Data:
 
         return ranges
 
-    def get_data_in_range(self) -> None:
+    def get_data_in_range(self) -> bool:
         """Retrieve data from NBP API for time range specified within class instance."""
         ranges = self._identify_date_ranges()
 
@@ -52,21 +52,29 @@ class Data:
                 response = requests.get(f'{api_table_a}/{ran[0]}/{ran[1]}')
                 self.data.extend(response.json())
             except requests.exceptions.JSONDecodeError:
-                print("Given time range exceeds available data.")
-                return None
+                print('Given time range exceeds available data.')
+                return False
+            except Exception as e:
+                print(f'An exception occurred during fetching data from API. {e}')
+                return False
 
-    def get_data_single_dates(self) -> None:
-        first = requests.get(f'{api_table_a}/{self.start}')
-        self.data.extend(first.json())
+        return True
 
-        last = requests.get(f'{api_table_a}/{self.end}')
-        self.data.extend(last.json())
+    def get_data_single_dates(self) -> bool:
+        try:
+            first = requests.get(f'{api_table_a}/{self.start}')
+            self.data.extend(first.json())
+
+            last = requests.get(f'{api_table_a}/{self.end}')
+            self.data.extend(last.json())
+        except requests.exceptions.JSONDecodeError:
+            print('Given time range exceeds available data.')
+            return False
+        except Exception as e:
+            print(f'An exception occurred during fetching data from API. {e}')
+            return False
+
+        return True
 
     def show_data(self) -> None:
         pprint(self.data)
-
-    @staticmethod
-    def validate_date(date: str) -> bool:
-        if not re.match(r'^\d{4}-\d{2}-\d{2}$', date):
-            return False
-        return True

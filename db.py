@@ -36,13 +36,19 @@ class Database:
 
         return True
 
-    def save_data(self, data: list[dict]) -> None:
+    def save_data(self, data: list[dict]) -> bool:
         for record in data:
             record_date = record['effectiveDate']
             for rate in record['rates']:
                 self.cursor.execute('INSERT OR IGNORE INTO exchange_rates (date, code, currency, mid) VALUES (?, ?, ?, ?)',
                                     (record_date, rate['code'], rate['currency'], round(rate['mid'], 6)))
-        self.conn.commit()
+        try:
+            self.conn.commit()
+        except Exception as e:
+            print(f'An exception occurred during saving data to database. {e}')
+            return False
+
+        return True
 
     def get_data_for_date(self, date: str) -> list:
         self.cursor.execute('SELECT * FROM exchange_rates WHERE date is ?', (date,))
@@ -66,3 +72,7 @@ class Database:
     def read_db(self):
         self.cursor.execute('SELECT * FROM exchange_rates')
         pprint(self.cursor.fetchall())
+
+    def get_all_data(self):
+        self.cursor.execute('SELECT date, code, mid FROM exchange_rates')
+        return self.cursor.fetchall()
