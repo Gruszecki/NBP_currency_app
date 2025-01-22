@@ -31,7 +31,7 @@ class NBPApp:
     @staticmethod
     @validate_date
     def analyze(start_date: str, end_date: str) -> bool:
-        print(f'Analyzing the currencies in provided date range {start_date} - {end_date}')
+        print(f'Analyzing the currencies in date range {start_date} - {end_date}')
         with Database() as db:
             max_inc, max_dec = db.get_data_for_max_diffs(start_date, end_date)
 
@@ -58,6 +58,8 @@ class NBPApp:
                 save_format = Csv()
                 save_format.save(data)
 
+            print('Report(s) generated.')
+
     @staticmethod
     def run(start_date: str, end_date: str, report_format: list[str], currency: str = None, all_currencies: bool = False) -> bool:
         data = Data(start_date, end_date)
@@ -78,3 +80,5 @@ class NBPApp:
         else:
             print('An error while saving data in database occurred.')
             return False
+
+        return True
