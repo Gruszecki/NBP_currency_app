@@ -13,7 +13,7 @@ Aplikacja udostępnia interfejs wiersza poleceń (CLI). Użytkownik może urucho
 - ```save```
 - ```analyze```
 - ```report```
-- ```run```
+- ```run``` - uruchamia wszystkie poprzednie
 
 ### Komendy i opcje
 #### ```show``` pobiera dane z API i wyświetla je w terminalu.
