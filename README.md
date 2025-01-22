@@ -16,8 +16,7 @@ Aplikacja udostępnia interfejs wiersza poleceń (CLI). Użytkownik może urucho
 - ```run```
 
 ### Komendy i opcje
-#### ```show```
-Pobiera dane z API i wyświetla je w terminalu.
+#### ```show``` pobiera dane z API i wyświetla je w terminalu.
 #### Składnia
 ```
 python app.py show [data_początkowa] [data_końcowa]
@@ -27,8 +26,7 @@ python app.py show [data_początkowa] [data_końcowa]
 python app.py show 2024-12-01 2024-12-31
 ```
 
-#### ```save```
-Pobiera dane z API i zapisuje je do bazy danych.
+#### ```save``` pobiera dane z API i zapisuje je do bazy danych.
 #### Składnia
 ```
 python app.py save [data_początkowa] [data_końcowa]
@@ -38,8 +36,7 @@ python app.py save [data_początkowa] [data_końcowa]
 python app.py save 2024-12-01 2024-12-31
 ```
 
-#### ```analyze```
-Analizuje dane z podanego zakresu dat na podstawie bazy danych.
+#### ```analyze``` analizuje dane z podanego zakresu dat na podstawie bazy danych.
 #### Składnia
 ```
 python app.py analyze  [data_początkowa] [data_końcowa]
@@ -49,8 +46,8 @@ python app.py analyze  [data_początkowa] [data_końcowa]
 python app.py analyze 2024-12-01 2024-12-31
 ```
 
-#### ```report```
-Generuje raport na podstawie danych z podanego zakresu dat. Raport może być wygenerowany w formatach csv i/lub json i zawiera analizę dla wszystkich bądź jednej konkretnej waluty.
+#### ```report``` generuje raport na podstawie danych z podanego zakresu dat. 
+Raport może być wygenerowany w formatach csv i/lub json i zawiera analizę dla wszystkich bądź jednej konkretnej waluty.
 #### Składnia
 ```
 python app.py report [data_początkowa] [data_końcowa] [-f csv|json] [-c kod_waluty|--all]
@@ -67,8 +64,8 @@ python app.py report 2024-12-01 2024-12-31 -f csv json -c USD
 python app.py report 2024-12-01 2024-12-31 -f json --all
 ```
 
-#### ```run```
-Uruchamia cały proces: pobieranie danych, zapisywanie do bazy, analizę i generowanie raportu.
+#### ```run``` uruchamia cały proces. 
+Pobieranie danych, zapisywanie do bazy, analizę i generowanie raportu.
 #### Składnia
 ```
 python main.py report [data_początkowa] [data_końcowa] [-f csv|json] [-c kod_waluty|--all]
