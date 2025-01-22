@@ -1,21 +1,12 @@
-import re
 from pprint import pprint
 
-from api_management import Data
+from data_management import Data
 from db import Database
+from save_management import Csv, Json
+from utils import calculate_working_dates, validate_date
 
 
 class NBPApp:
-    @staticmethod
-    def validate_date(func):
-        def wrapper(*args, **kwargs):
-            for i in range(2):
-                if not re.match(r'^\d{4}-\d{2}-\d{2}$', args[i]):
-                    print('Wrong data format. At least one provided date does not match pattern YYYY-MM-DD.')
-                    return False
-            return func(*args, **kwargs)
-        return wrapper
-
     @staticmethod
     @validate_date
     def show(start_date: str, end_date: str) -> bool:
@@ -29,37 +20,61 @@ class NBPApp:
         return True
 
     @staticmethod
-    @validate_date
-    def save(start_date: str, end_date: str) -> bool:
+    def print_data(data):
+        pprint(data.data)
+
+    @staticmethod
+    def save(data: Data) -> bool:
         with Database() as db:
-            data = Data(start_date, end_date)
-            if data.get_data_in_range():
-                return db.save_data(data.data)
+            return db.save_data(data.data)
 
     @staticmethod
     @validate_date
     def analyze(start_date: str, end_date: str) -> bool:
         print(f'Analyzing the currencies in provided date range {start_date} - {end_date}')
-        data = Data(start_date, end_date)
+        with Database() as db:
+            max_inc, max_dec = db.get_data_for_max_diffs(start_date, end_date)
 
-        if data.get_data_single_dates() and len(data.data) > 1:
-            with Database(default_db=False) as temp_db:
-                temp_db.save_data(data.data)
-                max_diffs = temp_db.get_data_for_analyze(start_date, end_date)
+            print(f'Currency with the largest increase is {max_inc[1]} ({max_inc[0]}) and it changed by '
+                  f'{max_inc[4]:.6f} from {max_inc[2]} to {max_inc[3]} which is {max_inc[5]}%.')
+            print(f'Currency with the largest decrease is {max_dec[1]} ({max_dec[0]}) and it changed by '
+                  f'{max_dec[4]:.6f} from {max_dec[2]} to {max_dec[3]} which is {max_dec[5]}%.')
 
-                print(f'Currency with the largest increase {max_diffs[0][2]:.6f} is {max_diffs[0][1]} ({max_diffs[0][0]}).')
-                if len(max_diffs) > 1:
-                    print(f'Currency with the largest decrease {max_diffs[1][2]:.6f} is {max_diffs[1][1]} ({max_diffs[1][0]}).')
-        else:
-            print('There is no data for at least one of provided dates.')
-            return False
         return True
 
     @staticmethod
     @validate_date
     def report(start_date: str, end_date: str, report_format: list[str], currency: str = None, all_currencies: bool = False) -> bool:
         with Database() as db:
-            data = db.get_all_data()
+            if currency:
+                data = db.get_data_for_currency_diff(currency.upper(), start_date, end_date)
+            elif all_currencies:
+                data = db.get_data_for_all_diff(start_date, end_date)
 
-            for record in data:
-                print(record)
+            if 'json' in report_format:
+                save_format = Json()
+                save_format.save(data)
+            if 'csv' in report_format:
+                save_format = Csv()
+                save_format.save(data)
+
+    @staticmethod
+    def run(start_date: str, end_date: str, report_format: list[str], currency: str = None, all_currencies: bool = False) -> bool:
+        data = Data(start_date, end_date)
+
+        start_date, end_date = calculate_working_dates(start_date, end_date)
+
+        if not data.get_data_in_range():
+            print('Something went wrong')
+            return False
+
+        NBPApp.print_data(data=data)
+        print(f'Working date range: {start_date} - {end_date}')
+        save_res = NBPApp.save(data=data)
+
+        if save_res:
+            NBPApp.analyze(start_date=start_date, end_date=end_date)
+            NBPApp.report(start_date, end_date, report_format, currency, all_currencies)
+        else:
+            print('An error while saving data in database occurred.')
+            return False

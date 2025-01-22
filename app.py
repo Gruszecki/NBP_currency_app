@@ -33,11 +33,19 @@ if __name__ == '__main__':
     report_range_group.add_argument('-c', '--currency', help='Currency code (e.g., USD).')
     report_range_group.add_argument('--all', action='store_true', help='Include all currencies.')
 
+    report_parser = subparsers.add_parser('run', help='Generate report')
+    report_parser.add_argument(**dates_template)
+    report_parser.add_argument('-f', '--format', choices=['csv', 'json'], nargs='+', help='Format: csv and/or json.')
+    report_parser.set_defaults(func=NBPApp.run)
+    report_range_group = report_parser.add_mutually_exclusive_group()
+    report_range_group.add_argument('-c', '--currency', help='Currency code (e.g., USD).')
+    report_range_group.add_argument('--all', action='store_true', help='Include all currencies.')
+
     args = parser.parse_args()
 
     if not args.command:
         print('Show UI')
-    elif args.command == 'report':
+    elif args.command == 'report' or args.command == 'run':
         args.func(*args.dates, args.format, args.currency, args.all)
     else:
         args.func(*args.dates)
