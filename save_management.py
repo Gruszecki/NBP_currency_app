@@ -20,7 +20,7 @@ class Json(Format):
         else:
             filename = f'analyze_{data[0][1]}_-_{data[0][2]}_all.json'
 
-        for first_date, last_date, code, first_mid, last_mid, diff, change_per in data:
+        for code, first_date, last_date, first_mid, last_mid, diff, change_per in data:
             report_data[code].update({'first_date': first_date})
             report_data[code].update({'last_date': last_date})
             report_data[code].update({'first_mid': first_mid})
@@ -31,7 +31,11 @@ class Json(Format):
         report_data_json = json.dumps(report_data, ensure_ascii=False, indent=4)
 
         with open(filename, 'w') as f:
-            f.write(report_data_json)
+            try:
+                f.write(report_data_json)
+                print(f'JSON file saved as {filename}')
+            except Exception as e:
+                print(f'An error occurred during saving report. {e}')
 
 
 class Csv(Format):
@@ -42,9 +46,14 @@ class Csv(Format):
             filename = f'analyze_{data[0][1]}_-_{data[0][2]}_all.csv'
 
         with open(filename, 'w') as f:
-            f.write('code;first date;last date;first mid;last mid;diff;diff percentage\n')
+            try:
+                f.write('code;first date;last date;first mid;last mid;diff;diff percentage\n')
 
-            for record in data:
-                for col in record:
-                    f.write(f'{col};')
-                f.write('\n')
+                for record in data:
+                    for col in record:
+                        f.write(f'{col};')
+                    f.write('\n')
+
+                print(f'CSV file saved as {filename}')
+            except Exception as e:
+                print(f'An error occurred during saving report. {e}')
