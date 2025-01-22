@@ -65,7 +65,10 @@ class NBPApp:
 
     @staticmethod
     @validate_date
-    def report(start_date: str, end_date: str, report_format: list[str], currency: str = None, all_currencies: bool = False) -> bool:
+    def report(start_date: str, end_date: str, report_format: list[str], currency: str = None, all_currencies: bool = False, validate_range=True) -> bool:
+        if validate_range:
+            start_date, end_date = utils.calculate_working_dates(start_date, end_date)
+
         with Database() as db:
             if currency:
                 data = db.get_data_for_currency_diff(currency.upper(), start_date, end_date)
@@ -100,7 +103,7 @@ class NBPApp:
 
         if save_res:
             NBPApp.analyze(start_date=start_date, end_date=end_date, validate_range=False)
-            NBPApp.report(start_date, end_date, report_format, currency, all_currencies)
+            NBPApp.report(start_date, end_date, report_format, currency, all_currencies, validate_range=False)
         else:
             print('An error while saving data in database occurred.')
             return False
