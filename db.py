@@ -1,7 +1,4 @@
-import os
 import sqlite3
-from datetime import datetime, timedelta
-from pprint import pprint
 
 from consts import database_name
 
@@ -58,7 +55,7 @@ class Database:
                             'last as (SELECT date, code, mid FROM exchange_rates WHERE code IS ? AND date is ?)'
                             'SELECT first.code, first.date, last.date, first.mid, last.mid, '
                             'ROUND(last.mid-first.mid, 6), ROUND((last.mid*100/first.mid)-100, 3) '
-                            'FROM first INNER JOIN last ON first.code = last.code',
+                            'FROM first FULL JOIN last ON first.code = last.code',
                             (code, first, code, last))
         return self.cursor.fetchall()
 
@@ -67,7 +64,7 @@ class Database:
                             'last as (SELECT date, code, mid FROM exchange_rates WHERE date is ?) '
                             'SELECT first.code, first.date, last.date, first.mid, last.mid, '
                             'ROUND(last.mid-first.mid, 6), ROUND((last.mid*100/first.mid)-100, 3) '
-                            'FROM first INNER JOIN last ON first.code = last.code',
+                            'FROM first FULL JOIN last ON first.code = last.code',
                             (first, last))
         return self.cursor.fetchall()
 

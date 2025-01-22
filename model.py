@@ -1,5 +1,6 @@
 from pprint import pprint
 
+import utils
 from data_management import Data
 from db import Database
 from save_management import Csv, Json
@@ -20,27 +21,40 @@ class NBPApp:
         return True
 
     @staticmethod
-    def print_data(data):
+    def _print_data(data):
         pprint(data.data)
 
     @staticmethod
-    def save(data: Data) -> bool:
+    def _save_to_db(data: Data) -> bool:
         with Database() as db:
             return db.save_data(data.data)
 
     @staticmethod
+    def save(start_date: str, end_date: str) -> bool:
+        data = Data(start_date, end_date)
+        data.get_data_in_range()
+        return NBPApp._save_to_db(data)
+
+    @staticmethod
     @validate_date
-    def analyze(start_date: str, end_date: str) -> bool:
+    def analyze(start_date: str, end_date: str, validate_range=True) -> bool:
+        if validate_range:
+            start_date, end_date = utils.calculate_working_dates(start_date, end_date)
+
         print(f'Analyzing the currencies in date range {start_date} - {end_date}')
+
         with Database() as db:
-            max_inc, max_dec = db.get_data_for_max_diffs(start_date, end_date)
+            if db.get_data_for_max_diffs(start_date, end_date):
+                max_inc, max_dec = db.get_data_for_max_diffs(start_date, end_date)
 
-            print(f'Currency with the largest increase is {max_inc[1]} ({max_inc[0]}) and it changed by '
-                  f'{max_inc[4]:.6f} from {max_inc[2]} to {max_inc[3]} which is {max_inc[5]}%.')
-            print(f'Currency with the largest decrease is {max_dec[1]} ({max_dec[0]}) and it changed by '
-                  f'{max_dec[4]:.6f} from {max_dec[2]} to {max_dec[3]} which is {max_dec[5]}%.')
+                print(f'Currency with the largest increase is {max_inc[1]} ({max_inc[0]}) and it changed by '
+                      f'{max_inc[4]:.6f} from {max_inc[2]} to {max_inc[3]} which is {max_inc[5]}%.')
+                print(f'Currency with the largest decrease is {max_dec[1]} ({max_dec[0]}) and it changed by '
+                      f'{max_dec[4]:.6f} from {max_dec[2]} to {max_dec[3]} which is {max_dec[5]}%.')
+            else:
+                print('Analyze could not be performed.')
 
-        return True
+            return True
 
     @staticmethod
     @validate_date
@@ -51,14 +65,17 @@ class NBPApp:
             elif all_currencies:
                 data = db.get_data_for_all_diff(start_date, end_date)
 
-            if 'json' in report_format:
-                save_format = Json()
-                save_format.save(data)
-            if 'csv' in report_format:
-                save_format = Csv()
-                save_format.save(data)
+            if all(data[0]):
+                if 'json' in report_format:
+                    save_format = Json()
+                    save_format.save(data)
+                if 'csv' in report_format:
+                    save_format = Csv()
+                    save_format.save(data)
 
-            print('Report(s) generated.')
+                print('Report(s) generated.')
+            else:
+                print('Not all requested data are available in database.')
 
     @staticmethod
     def run(start_date: str, end_date: str, report_format: list[str], currency: str = None, all_currencies: bool = False) -> bool:
@@ -70,12 +87,12 @@ class NBPApp:
             print('Something went wrong')
             return False
 
-        NBPApp.print_data(data=data)
+        NBPApp._print_data(data=data)
         print(f'Working date range: {start_date} - {end_date}')
-        save_res = NBPApp.save(data=data)
+        save_res = NBPApp._save_to_db(data=data)
 
         if save_res:
-            NBPApp.analyze(start_date=start_date, end_date=end_date)
+            NBPApp.analyze(start_date=start_date, end_date=end_date, validate_range=False)
             NBPApp.report(start_date, end_date, report_format, currency, all_currencies)
         else:
             print('An error while saving data in database occurred.')

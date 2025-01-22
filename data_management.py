@@ -32,16 +32,18 @@ class Data:
         for r in ranges:
             start, end = calculate_working_dates(r[0], r[1])
             response = self._api_call(f'{api_table_a}/{start}/{end}')
-            self.data.extend(response)
+            if response:
+                self.data.extend(response)
+            else:
+                return False
 
         return True
 
-    def get_data_single_dates(self) -> bool:
+    def check_dates_availability(self) -> bool:
         first = self._api_call(f'{api_table_a}/{self.start}')
-        self.data.extend(first)
-
         last = self._api_call(f'{api_table_a}/{self.end}')
-        self.data.extend(last)
+
+        print(first, last)
 
         return True
 

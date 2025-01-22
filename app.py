@@ -10,7 +10,7 @@ if __name__ == '__main__':
     dates_template = {
         'dest': 'dates',
         'nargs': 2,
-        'help': 'Start and end date in YYYY-MM-DD format.',
+        'help': 'Start and end date in YYYY-MM-DD format separated with space.',
     }
 
     show_parser = subparsers.add_parser('show', help='Download data from API and print')
@@ -33,7 +33,7 @@ if __name__ == '__main__':
     report_range_group.add_argument('-c', '--currency', help='Currency code (e.g., USD).')
     report_range_group.add_argument('--all', action='store_true', help='Include all currencies.')
 
-    report_parser = subparsers.add_parser('run', help='Generate report')
+    report_parser = subparsers.add_parser('run', help='Run whole process')
     report_parser.add_argument(**dates_template)
     report_parser.add_argument('-f', '--format', choices=['csv', 'json'], nargs='+', help='Format: csv and/or json.')
     report_parser.set_defaults(func=NBPApp.run)
