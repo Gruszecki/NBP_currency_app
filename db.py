@@ -83,7 +83,3 @@ class Database:
         )
 
         return self.cursor.fetchall()
-
-    def get_all_data(self):
-        self.cursor.execute('SELECT * FROM exchange_rates')
-        return self.cursor.fetchall()

@@ -1,6 +1,7 @@
 import argparse
 
 from model import NBPApp
+from ui import ui
 
 
 if __name__ == '__main__':
@@ -44,7 +45,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if not args.command:
-        print('Show UI')
+        ui()
     elif args.command == 'report' or args.command == 'run':
         args.func(*args.dates, args.format, args.currency, args.all)
     else:

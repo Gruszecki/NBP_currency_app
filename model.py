@@ -43,9 +43,15 @@ class NBPApp:
 
         print(f'Analyzing the currencies in date range {start_date} - {end_date}')
 
+        if start_date == end_date:
+            print('Cannot perform analysis because the first and the last date are the same.')
+            return False
+
         with Database() as db:
-            if db.get_data_for_max_diffs(start_date, end_date):
-                max_inc, max_dec = db.get_data_for_max_diffs(start_date, end_date)
+            result = db.get_data_for_max_diffs(start_date, end_date)
+
+            if result:
+                max_inc, max_dec = result
 
                 print(f'Currency with the largest increase is {max_inc[1]} ({max_inc[0]}) and it changed by '
                       f'{max_inc[4]:.6f} from {max_inc[2]} to {max_inc[3]} which is {max_inc[5]}%.')
@@ -53,6 +59,7 @@ class NBPApp:
                       f'{max_dec[4]:.6f} from {max_dec[2]} to {max_dec[3]} which is {max_dec[5]}%.')
             else:
                 print('Analyze could not be performed.')
+                return False
 
             return True
 

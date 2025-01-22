@@ -12,8 +12,7 @@ def validate_date(func):
                     print('Wrong data format. At least one provided date does not match pattern YYYY-MM-DD.')
                     return False
         elif kwargs:
-            if not re.match(r'^\d{4}-\d{2}-\d{2}$', kwargs['start_date']) or not re.match(r'^\d{4}-\d{2}-\d{2}$',
-                                                                                          kwargs['end_date']):
+            if not re.match(r'^\d{4}-\d{2}-\d{2}$', kwargs['start_date']) or not re.match(r'^\d{4}-\d{2}-\d{2}$', kwargs['end_date']):
                 print('Wrong data format. At least one provided date does not match pattern YYYY-MM-DD.')
                 return False
         return func(*args, **kwargs)

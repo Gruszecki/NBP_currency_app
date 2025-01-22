@@ -1,7 +1,7 @@
+import json
 import urllib.error
 import urllib.request
 from pprint import pprint
-import json
 
 from consts import api_table_a
 from utils import identify_date_ranges, calculate_working_dates
