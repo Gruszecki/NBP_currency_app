@@ -57,18 +57,20 @@ class Database:
     def get_data_for_currency_diff(self, code: str, first: str, last: str) -> list:
         self.cursor.execute('WITH first as (SELECT date, code, mid FROM exchange_rates WHERE code IS ? AND date is ?), '
                             'last as (SELECT date, code, mid FROM exchange_rates WHERE code IS ? AND date is ?)'
-                            'SELECT first.code, first.date, last.date, first.mid, last.mid, '
+                            'SELECT first.code, cc.currency, first.date, last.date, first.mid, last.mid, '
                             'ROUND(last.mid-first.mid, 6), ROUND((last.mid*100/first.mid)-100, 3) '
-                            'FROM first FULL JOIN last ON first.code = last.code',
+                            'FROM first FULL JOIN last ON first.code = last.code '
+                            'LEFT JOIN currencies_codes AS cc ON first.code = cc.code',
                             (code, first, code, last))
         return self.cursor.fetchall()
 
     def get_data_for_all_diff(self, first: str, last: str) -> list:
         self.cursor.execute('WITH first as (SELECT date, code, mid FROM exchange_rates WHERE date is ?), '
                             'last as (SELECT date, code, mid FROM exchange_rates WHERE date is ?) '
-                            'SELECT first.code, first.date, last.date, first.mid, last.mid, '
+                            'SELECT first.code, cc.currency, first.date, last.date, first.mid, last.mid, '
                             'ROUND(last.mid-first.mid, 6), ROUND((last.mid*100/first.mid)-100, 3) '
-                            'FROM first FULL JOIN last ON first.code = last.code',
+                            'FROM first FULL JOIN last ON first.code = last.code '
+                            'LEFT JOIN currencies_codes AS cc ON first.code = cc.code',
                             (first, last))
         return self.cursor.fetchall()
 
