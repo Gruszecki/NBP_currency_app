@@ -69,9 +69,6 @@ class NBPApp:
     @staticmethod
     def report(dates: list[str], report_format: list[str], currency: str = None,
                all_currencies: bool = False, all_data: bool = False, validate_range: bool = True) -> bool:
-        if dates:
-            start_date, end_date = dates
-
         if not all_data:
             if len(dates) < 2:
                 print('Start date and end date must be provided.')
@@ -82,6 +79,8 @@ class NBPApp:
 
             if validate_range:
                 start_date, end_date = utils.calculate_working_dates(dates)
+            else:
+                start_date, end_date = dates
         else:
             with Database() as db:
                 start_date, end_date = db.get_db_range()[0]

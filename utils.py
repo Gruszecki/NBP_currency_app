@@ -22,6 +22,18 @@ def validate_dates_argument(func):
 
 
 def calculate_working_dates(dates: list[str] | tuple) -> tuple:
+    """
+    Adjusts the given date range to ensure both dates fall on weekdays.
+
+    Args:
+        dates (list[str] | tuple): A list or tuple containing two date strings in the format 'YYYY-MM-DD'.
+            The first date represents the start of the range, and the second date represents the end.
+
+    Returns:
+        tuple: A tuple containing two adjusted date strings in the format 'YYYY-MM-DD'.
+            The first date is shifted forward to the nearest weekday if it falls on a weekend,
+            and the last date is shifted backward to the nearest weekday if it falls on a weekend.
+    """
     date_format = '%Y-%m-%d'
 
     first = datetime.strptime(dates[0], date_format)
