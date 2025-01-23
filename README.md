@@ -93,4 +93,4 @@ python app.py run -d 2024-12-01 2024-12-31 -f csv -ah
 ```
 
 ### UI
-Jeśli użytkownik nie poda żadnej komendy, uruchomi się interfejs użytkownika, który poprowadzi.
+Jeśli użytkownik nie poda żadnej komendy, uruchomi się interfejs użytkownika.
