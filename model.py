@@ -4,22 +4,10 @@ import utils
 from data_management import Data
 from db import Database
 from save_management import Csv, Json
-from utils import calculate_working_dates, validate_date, validate_date_argument
+from utils import calculate_working_dates, validate_dates, validate_dates_argument
 
 
 class NBPApp:
-    @staticmethod
-    @validate_date_argument
-    def show(start_date: str, end_date: str) -> bool:
-        print(f'NBP exchange rates data for date range {start_date} - {end_date}')
-        data = Data(start_date, end_date)
-
-        if not data.get_data_in_range():
-            return False
-
-        data.show_data()
-        return True
-
     @staticmethod
     def _print_data(data):
         pprint(data.data)
@@ -30,16 +18,31 @@ class NBPApp:
             return db.save_data(data.data)
 
     @staticmethod
-    def save(start_date: str, end_date: str) -> bool:
-        data = Data(start_date, end_date)
-        data.get_data_in_range()
-        return NBPApp._save_to_db(data)
+    @validate_dates_argument
+    def show(dates: list[str]) -> bool:
+        print(f'NBP exchange rates data for date range {dates[0]} - {dates[1]}')
+        data = Data(dates[0], dates[1])
+
+        if not data.get_data_in_range():
+            return False
+
+        data.show_data()
+        return True
 
     @staticmethod
-    @validate_date_argument
-    def analyze(start_date: str, end_date: str, validate_range=True) -> bool:
+    @validate_dates_argument
+    def save(dates: list[str]) -> bool:
+        data = Data(dates[0], dates[1])
+        if data.get_data_in_range():
+            return NBPApp._save_to_db(data)
+
+    @staticmethod
+    @validate_dates_argument
+    def analyze(dates: list[str], validate_range=True) -> bool:
+        start_date, end_date = dates
+
         if validate_range:
-            start_date, end_date = utils.calculate_working_dates(start_date, end_date)
+            start_date, end_date = utils.calculate_working_dates(dates)
 
         print(f'Analyzing the currencies in date range {start_date} - {end_date}')
 
@@ -64,19 +67,21 @@ class NBPApp:
             return True
 
     @staticmethod
-    def report(report_format: list[str], start_date: str = '', end_date: str = '', currency: str = None,
+    def report(dates: list[str], report_format: list[str], currency: str = None,
                all_currencies: bool = False, all_data: bool = False, validate_range: bool = True) -> bool:
+        if dates:
+            start_date, end_date = dates
 
         if not all_data:
-            if not start_date or not end_date:
+            if len(dates) < 2:
                 print('Start date and end date must be provided.')
                 return False
-            if not validate_date(start_date) or not validate_date(end_date):
+            if not validate_dates(dates):
                 print('At least one provided data has wrong format.')
                 return False
 
             if validate_range:
-                start_date, end_date = utils.calculate_working_dates(start_date, end_date)
+                start_date, end_date = utils.calculate_working_dates(dates)
         else:
             with Database() as db:
                 start_date, end_date = db.get_db_range()[0]
@@ -102,13 +107,11 @@ class NBPApp:
 
         return True
 
-
     @staticmethod
-    def run(start_date: str, end_date: str, report_format: list[str], currency: str = None,
+    def run(dates: list[str], report_format: list[str], currency: str = None,
             all_currencies: bool = False, all_data: bool = False) -> bool:
+        start_date, end_date = calculate_working_dates(dates)
         data = Data(start_date, end_date)
-
-        start_date, end_date = calculate_working_dates(start_date, end_date)
 
         if not data.get_data_in_range():
             print('Something went wrong')
@@ -119,8 +122,8 @@ class NBPApp:
         save_res = NBPApp._save_to_db(data=data)
 
         if save_res:
-            NBPApp.analyze(start_date=start_date, end_date=end_date, validate_range=False)
-            NBPApp.report(report_format=report_format, start_date=start_date, end_date=end_date, currency=currency,
+            NBPApp.analyze([start_date, end_date], validate_range=False)
+            NBPApp.report(dates=[start_date, end_date], report_format=report_format, currency=currency,
                           all_currencies=all_currencies, all_data=all_data, validate_range=False)
         else:
             print('An error while saving data in database occurred.')

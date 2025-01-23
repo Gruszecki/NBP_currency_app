@@ -29,21 +29,17 @@ class Data:
     def get_data_in_range(self) -> bool:
         ranges = identify_date_ranges(self.start, self.end)
 
+        if not ranges:
+            print('Could not specify working date ranges')
+            return False
+
         for r in ranges:
-            start, end = calculate_working_dates(r[0], r[1])
+            start, end = calculate_working_dates(r)
             response = self._api_call(f'{api_table_a}/{start}/{end}')
             if response:
                 self.data.extend(response)
             else:
                 return False
-
-        return True
-
-    def check_dates_availability(self) -> bool:
-        first = self._api_call(f'{api_table_a}/{self.start}')
-        last = self._api_call(f'{api_table_a}/{self.end}')
-
-        print(first, last)
 
         return True
 

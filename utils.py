@@ -4,40 +4,35 @@ from datetime import datetime, timedelta
 from consts import max_day_range
 
 
-def validate_date(date: str):
-    if not re.match(r'^\d{4}-\d{2}-\d{2}$', date):
-        return False
+def validate_dates(dates: list[str]):
+    for date in dates:
+        if not re.match(r'^\d{4}-\d{2}-\d{2}$', date):
+            return False
     return True
 
 
-def validate_date_argument(func):
+def validate_dates_argument(func):
     def wrapper(*args, **kwargs):
-        if args:
-            for i in range(2):
-                if not re.match(r'^\d{4}-\d{2}-\d{2}$', args[i]):
-                    print('Wrong data format. At least one provided date does not match pattern YYYY-MM-DD.')
-                    return False
-        elif kwargs:
-            if not re.match(r'^\d{4}-\d{2}-\d{2}$', kwargs['start_date']) or not re.match(r'^\d{4}-\d{2}-\d{2}$', kwargs['end_date']):
+        for date in args[0]:
+            if not re.match(r'^\d{4}-\d{2}-\d{2}$', date):
                 print('Wrong data format. At least one provided date does not match pattern YYYY-MM-DD.')
                 return False
         return func(*args, **kwargs)
-
     return wrapper
 
 
-def calculate_working_dates(first: str, last: str) -> tuple:
+def calculate_working_dates(dates: list[str] | tuple) -> tuple:
     date_format = '%Y-%m-%d'
 
-    first_date = datetime.strptime(first, date_format)
-    while first_date.weekday() >= 5:
-        first_date += timedelta(days=1)
-    first_str = first_date.strftime(date_format)
+    first = datetime.strptime(dates[0], date_format)
+    while first.weekday() >= 5:
+        first += timedelta(days=1)
+    first_str = first.strftime(date_format)
 
-    last_date = datetime.strptime(last, date_format)
-    while last_date.weekday() >= 5:
-        last_date -= timedelta(days=1)
-    last_str = last_date.strftime(date_format)
+    last = datetime.strptime(dates[1], date_format)
+    while last.weekday() >= 5:
+        last -= timedelta(days=1)
+    last_str = last.strftime(date_format)
 
     return first_str, last_str
 
