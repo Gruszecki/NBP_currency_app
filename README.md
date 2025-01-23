@@ -19,17 +19,17 @@ Aplikacja udostępnia interfejs wiersza poleceń (CLI). Użytkownik może urucho
 #### ```show``` pobiera dane z API i wyświetla je w terminalu.
 #### Składnia
 ```
-python app.py show [data_początkowa] [data_końcowa]
+python app.py show [-d data_początkowa data_końcowa]
 ```
 #### Przykład
 ```
-python app.py show 2024-12-01 2024-12-31
+python app.py show -d 2024-12-01 2024-12-31
 ```
 
 #### ```save``` pobiera dane z API i zapisuje je do bazy danych.
 #### Składnia
 ```
-python app.py save [data_początkowa] [data_końcowa]
+python app.py save [-d data_początkowa data_końcowa]
 ```
 #### Przykład:
 ```
@@ -39,47 +39,57 @@ python app.py save 2024-12-01 2024-12-31
 #### ```analyze``` analizuje dane z podanego zakresu dat na podstawie bazy danych.
 #### Składnia
 ```
-python app.py analyze  [data_początkowa] [data_końcowa]
+python app.py analyze [-d data_początkowa data_końcowa]
 ```
 #### Przykład
 ```
-python app.py analyze 2024-12-01 2024-12-31
+python app.py analyze -d 2024-12-01 2024-12-31
 ```
 
-#### ```report``` generuje raport na podstawie danych z podanego zakresu dat. 
+#### ```report``` generuje raport na podstawie danych z podanego zakresu dat lub wszystkich danych historycznych. 
 Raport może być wygenerowany w formatach csv i/lub json i zawiera analizę dla wszystkich bądź jednej konkretnej waluty.
 #### Składnia
 ```
-python app.py report [data_początkowa] [data_końcowa] [-f csv|json] [-c kod_waluty|--all]
+python app.py report [-d data_początkowa data_końcowa] [-f csv|json] [-c kod_waluty|-ac|-ah]
 ```
 Opcje:
+- -d, --dates: Określa zakres dat jeżeli nie wybrano pełnych danych historycznych.
 - -f, --format: Określa format raportu (np. csv, json lub oba).
 - -c, --currency: Kod waluty (np. USD).
-- --all: Uwzględnia wszystkie dostępne waluty.
+- -ac, --all-currencies: Uwzględnia wszystkie dostępne waluty.
+- -ah, --all-historical-data: Uwzględnia wszystkie dane z bazy danych (nie wymaga podawania dat).
 #### Przykład
 ```
-python app.py report 2024-12-01 2024-12-31 -f csv json -c USD
+python app.py report -d 2024-12-01 2024-12-31 -f csv json -c USD
 ```
 ```
-python app.py report 2024-12-01 2024-12-31 -f json --all
+python app.py report -d 2024-12-01 2024-12-31 -f json -ac
+```
+```
+python app.py report -f csv -ah
 ```
 
 #### ```run``` uruchamia cały proces. 
 Pobieranie danych, zapisywanie do bazy, analizę i generowanie raportu.
 #### Składnia
 ```
-python main.py report [data_początkowa] [data_końcowa] [-f csv|json] [-c kod_waluty|--all]
+python main.py report [-d data_początkowa data_końcowa] [-f csv|json] [-c kod_waluty|-ac|-ah]
 ```
 Opcje:
+- -d, --dates: Określa zakres dat.
 - -f, --format: Określa format raportu (np. csv, json lub oba).
 - -c, --currency: Kod waluty (np. USD).
-- --all: Uwzględnia wszystkie dostępne waluty.
+- -ac, --all-currencies: Uwzględnia wszystkie dostępne waluty.
+- -ah, --all-historical-data: Uwzględnia wszystkie dane z bazy danych.
 #### Przykład
 ```
-python app.py report 2024-12-01 2024-12-31 -f csv json -c USD
+python app.py run -d 2024-12-01 2024-12-31 -f csv json -c USD
 ```
 ```
-python app.py report 2024-12-01 2024-12-31 -f json --all
+python app.py run -d 2024-12-01 2024-12-31 -f json -ac
+```
+```
+python app.py run -d 2024-12-01 2024-12-31 -f csv -ah
 ```
 
 ### UI
