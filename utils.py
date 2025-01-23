@@ -4,7 +4,13 @@ from datetime import datetime, timedelta
 from consts import max_day_range
 
 
-def validate_date(func):
+def validate_date(date: str):
+    if not re.match(r'^\d{4}-\d{2}-\d{2}$', date):
+        return False
+    return True
+
+
+def validate_date_argument(func):
     def wrapper(*args, **kwargs):
         if args:
             for i in range(2):

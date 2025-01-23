@@ -4,12 +4,12 @@ import utils
 from data_management import Data
 from db import Database
 from save_management import Csv, Json
-from utils import calculate_working_dates, validate_date
+from utils import calculate_working_dates, validate_date, validate_date_argument
 
 
 class NBPApp:
     @staticmethod
-    @validate_date
+    @validate_date_argument
     def show(start_date: str, end_date: str) -> bool:
         print(f'NBP exchange rates data for date range {start_date} - {end_date}')
         data = Data(start_date, end_date)
@@ -36,7 +36,7 @@ class NBPApp:
         return NBPApp._save_to_db(data)
 
     @staticmethod
-    @validate_date
+    @validate_date_argument
     def analyze(start_date: str, end_date: str, validate_range=True) -> bool:
         if validate_range:
             start_date, end_date = utils.calculate_working_dates(start_date, end_date)
@@ -64,31 +64,48 @@ class NBPApp:
             return True
 
     @staticmethod
-    @validate_date
-    def report(start_date: str, end_date: str, report_format: list[str], currency: str = None, all_currencies: bool = False, validate_range=True) -> bool:
-        if validate_range:
-            start_date, end_date = utils.calculate_working_dates(start_date, end_date)
+    def report(report_format: list[str], start_date: str = '', end_date: str = '', currency: str = None,
+               all_currencies: bool = False, all_data: bool = False, validate_range: bool = True) -> bool:
+
+        if not all_data:
+            if not start_date or not end_date:
+                print('Start date and end date must be provided.')
+                return False
+            if not validate_date(start_date) or not validate_date(end_date):
+                print('At least one provided data has wrong format.')
+                return False
+
+            if validate_range:
+                start_date, end_date = utils.calculate_working_dates(start_date, end_date)
+        else:
+            with Database() as db:
+                start_date, end_date = db.get_db_range()[0]
 
         with Database() as db:
             if currency:
                 data = db.get_data_for_currency_diff(currency.upper(), start_date, end_date)
-            elif all_currencies:
+            else:
                 data = db.get_data_for_all_diff(start_date, end_date)
 
-            if all(data[0]):
-                if 'json' in report_format:
-                    save_format = Json()
-                    save_format.save(data)
-                if 'csv' in report_format:
-                    save_format = Csv()
-                    save_format.save(data)
+        if data and all(data[0]):
+            if 'json' in report_format:
+                save_format = Json()
+                save_format.save(data)
+            if 'csv' in report_format:
+                save_format = Csv()
+                save_format.save(data)
 
-                print('Report(s) generated.')
-            else:
-                print('Not all requested data are available in database.')
+            print('Report(s) generated.')
+        else:
+            print('Not all requested data are available in database.')
+            return False
+
+        return True
+
 
     @staticmethod
-    def run(start_date: str, end_date: str, report_format: list[str], currency: str = None, all_currencies: bool = False) -> bool:
+    def run(start_date: str, end_date: str, report_format: list[str], currency: str = None,
+            all_currencies: bool = False, all_data: bool = False) -> bool:
         data = Data(start_date, end_date)
 
         start_date, end_date = calculate_working_dates(start_date, end_date)
@@ -103,7 +120,8 @@ class NBPApp:
 
         if save_res:
             NBPApp.analyze(start_date=start_date, end_date=end_date, validate_range=False)
-            NBPApp.report(start_date, end_date, report_format, currency, all_currencies, validate_range=False)
+            NBPApp.report(report_format=report_format, start_date=start_date, end_date=end_date, currency=currency,
+                          all_currencies=all_currencies, all_data=all_data, validate_range=False)
         else:
             print('An error while saving data in database occurred.')
             return False

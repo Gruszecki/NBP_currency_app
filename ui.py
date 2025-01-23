@@ -1,18 +1,17 @@
 import re
 
 from model import NBPApp
+from utils import validate_date
 
 
 def ui():
     print('Please provide the first and the last date from rang you want to work with in YYYY-MM-DD format.')
     first_date = input('First date: ')
-    if not re.match(r'^\d{4}-\d{2}-\d{2}$', first_date):
-        print('Wrong date format.')
+    if not validate_date(first_date):
         return
 
     last_date = input('Last date: ')
-    if not re.match(r'^\d{4}-\d{2}-\d{2}$', last_date):
-        print('Wrong date format.')
+    if not validate_date(last_date):
         return
 
     app = NBPApp()

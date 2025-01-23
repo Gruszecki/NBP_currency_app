@@ -50,6 +50,10 @@ class Database:
 
         return True
 
+    def get_db_range(self) -> list:
+        self.cursor.execute('SELECT MIN(date), MAX(date) FROM exchange_rates')
+        return self.cursor.fetchall()
+
     def get_data_for_currency_diff(self, code: str, first: str, last: str) -> list:
         self.cursor.execute('WITH first as (SELECT date, code, mid FROM exchange_rates WHERE code IS ? AND date is ?), '
                             'last as (SELECT date, code, mid FROM exchange_rates WHERE code IS ? AND date is ?)'
